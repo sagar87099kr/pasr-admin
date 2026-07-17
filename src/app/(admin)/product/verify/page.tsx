@@ -4,7 +4,7 @@ import { fetchAdminData } from '@/lib/fetchData';
 export default async function Page() {
   const { stats, requests: productsData } = await fetchAdminData('products');
   const { requests: bazaars } = await fetchAdminData('bazaars');
-  const bazaarsList = bazaars.map((b: any) => ({ id: b.raw._id.toString(), name: b.title }));
+  const bazaarsList = (bazaars || []).map((b: any) => ({ id: b.raw?._id?.toString() || b.id || 'error', name: b.title || 'Unknown' }));
   
   return (
     <DataList 

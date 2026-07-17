@@ -1,36 +1,35 @@
 'use server';
 
-import mongoose from 'mongoose';
 import { revalidatePath } from 'next/cache';
 
-const MONGODB_URI = process.env.MONGODB_URI || '';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://www.pasr.in';
 
-async function connectToDatabase() {
-  if (mongoose.connection.readyState !== 1) {
-    await mongoose.connect(MONGODB_URI);
+async function sendAction(action: string, payload: any) {
+  const response = await fetch(`${API_URL}/api/admin/action`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify({ action, payload })
+  });
+  
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`API returned ${response.status}: ${errorBody}`);
   }
-  const db = mongoose.connection.db;
-  if (!db) throw new Error('Database not connected');
-  return { db };
+  
+  const json = await response.json();
+  if (!json.success) {
+    throw new Error(json.message || 'Action failed');
+  }
+  return json;
 }
 
 export async function assignBazaar(entityId: string, bazaarId: string, type: 'providers' | 'shops') {
   try {
-    const { db } = await connectToDatabase();
-    
-    // Use the native mongodb driver to update
-    const result = await db.collection(type).updateOne(
-      { _id: new mongoose.Types.ObjectId(entityId) },
-      { $set: { bazaar: new mongoose.Types.ObjectId(bazaarId), verified: true } }
-    );
-    
-    if (result.matchedCount === 0) {
-      throw new Error(`${type === 'shops' ? 'Shop' : 'Provider'} not found`);
-    }
-    
-    // Revalidate the page to show the latest changes immediately
+    await sendAction('ASSIGN_BAZAAR', { entityId, bazaarId, type });
     revalidatePath(type === 'shops' ? '/shops/verify' : '/provider/verify');
-    
     return { success: true };
   } catch (error: any) {
     console.error('Error assigning bazaar:', error);
@@ -40,20 +39,8 @@ export async function assignBazaar(entityId: string, bazaarId: string, type: 'pr
 
 export async function assignDeliveryCategory(productId: string, category: string) {
   try {
-    const { db } = await connectToDatabase();
-    
-    const result = await db.collection('products').updateOne(
-      { _id: new mongoose.Types.ObjectId(productId) },
-      { $set: { deliveryCategory: category, verified: true } }
-    );
-    
-    if (result.matchedCount === 0) {
-      throw new Error('Product not found');
-    }
-    
-    // Revalidate the page
+    await sendAction('ASSIGN_DELIVERY_CATEGORY', { id: productId, category, collection: 'products' });
     revalidatePath('/product/verify');
-    
     return { success: true };
   } catch (error: any) {
     console.error('Error assigning delivery category:', error);
@@ -63,20 +50,8 @@ export async function assignDeliveryCategory(productId: string, category: string
 
 export async function assignItemDeliveryCategory(itemId: string, category: string) {
   try {
-    const { db } = await connectToDatabase();
-    
-    const result = await db.collection('items').updateOne(
-      { _id: new mongoose.Types.ObjectId(itemId) },
-      { $set: { deliveryCategory: category, isVerified: true } }
-    );
-    
-    if (result.matchedCount === 0) {
-      throw new Error('Item not found');
-    }
-    
-    // Revalidate the page
+    await sendAction('ASSIGN_DELIVERY_CATEGORY', { id: itemId, category, collection: 'items' });
     revalidatePath('/items/verify');
-    
     return { success: true };
   } catch (error: any) {
     console.error('Error assigning item delivery category:', error);
@@ -86,21 +61,11 @@ export async function assignItemDeliveryCategory(itemId: string, category: strin
 
 export async function deleteRecord(collectionName: string, recordId: string) {
   try {
-    const { db } = await connectToDatabase();
-    
-    const result = await db.collection(collectionName).deleteOne(
-      { _id: new mongoose.Types.ObjectId(recordId) }
-    );
-    
-    if (result.deletedCount === 0) {
-      throw new Error('Record not found');
-    }
-    
+    await sendAction('DELETE', { id: recordId, tab: collectionName });
     if (collectionName === 'products') revalidatePath('/product/verify');
     if (collectionName === 'items') revalidatePath('/items/verify');
     if (collectionName === 'shops') revalidatePath('/shops/verify');
     if (collectionName === 'providers') revalidatePath('/provider/verify');
-    
     return { success: true };
   } catch (error: any) {
     console.error('Error deleting record:', error);
@@ -110,20 +75,9 @@ export async function deleteRecord(collectionName: string, recordId: string) {
 
 export async function updateRecordPrice(collectionName: string, recordId: string, newPrice: number) {
   try {
-    const { db } = await connectToDatabase();
-    
-    const result = await db.collection(collectionName).updateOne(
-      { _id: new mongoose.Types.ObjectId(recordId) },
-      { $set: { price: Number(newPrice) } }
-    );
-    
-    if (result.matchedCount === 0) {
-      throw new Error('Record not found');
-    }
-    
+    await sendAction('UPDATE_PRICE', { id: recordId, collectionName, newPrice });
     if (collectionName === 'products') revalidatePath('/product/verify');
     if (collectionName === 'items') revalidatePath('/items/verify');
-    
     return { success: true };
   } catch (error: any) {
     console.error('Error updating price:', error);

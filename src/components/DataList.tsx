@@ -177,6 +177,8 @@ export default function DataList({ tabName, stats, requests, title, description,
                 <tr className="bg-gray-50/80 border-b border-gray-100 text-xs text-gray-500 font-bold uppercase tracking-wider">
                   <th className="p-4 pl-6">Details</th>
                   {tabName === 'orders' && <th className="p-4">Customer Info</th>}
+                  {tabName === 'orders' && <th className="p-4">Shop Info</th>}
+                  {tabName === 'orders' && <th className="p-4">Delivery Info</th>}
                   {tabName === 'orders' && <th className="p-4">Total Amount</th>}
                   {(tabName === 'products' || tabName === 'items') && <th className="p-4">Price / M.R.P.</th>}
                   {(tabName === 'products' || tabName === 'items') && <th className="p-4">Store Location</th>}
@@ -209,6 +211,18 @@ export default function DataList({ tabName, stats, requests, title, description,
                       <td className="p-4 align-middle">
                         <div className="text-sm font-bold text-gray-800">{item.raw?.customerName || item.raw?.customerId}</div>
                         <div className="text-xs text-gray-500 mt-0.5">{item.raw?.customerPhone || 'No Phone'}</div>
+                      </td>
+                    )}
+                    {tabName === 'orders' && (
+                      <td className="p-4 align-middle">
+                        <div className="text-sm font-bold text-gray-800">{item.raw?.shopName || 'Unknown Shop'}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{item.raw?.shopPhone || 'No Phone'}</div>
+                      </td>
+                    )}
+                    {tabName === 'orders' && (
+                      <td className="p-4 align-middle">
+                        <div className="text-sm font-bold text-gray-800">{item.raw?.partnerName || 'Unassigned'}</div>
+                        <div className="text-xs text-gray-500 mt-0.5">{item.raw?.partnerPhone || '-'}</div>
                       </td>
                     )}
                     {tabName === 'orders' && (

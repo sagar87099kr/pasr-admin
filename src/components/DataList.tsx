@@ -211,6 +211,11 @@ export default function DataList({ tabName, stats, requests, title, description,
                       <td className="p-4 align-middle">
                         <div className="text-sm font-bold text-gray-800">{item.raw?.customerName || item.raw?.customerId}</div>
                         <div className="text-xs text-gray-500 mt-0.5">{item.raw?.customerPhone || 'No Phone'}</div>
+                        {item.raw?.deliveryAddress && (
+                          <div className="text-[10px] text-gray-400 mt-1 max-w-[150px] whitespace-normal leading-tight">
+                            📍 {item.raw.deliveryAddress}
+                          </div>
+                        )}
                       </td>
                     )}
                     {tabName === 'orders' && (

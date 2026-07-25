@@ -84,3 +84,14 @@ export async function updateRecordPrice(collectionName: string, recordId: string
     return { success: false, error: error.message || 'Failed to update price' };
   }
 }
+
+export async function markRemitted(groupId: string) {
+  try {
+    await sendAction('MARK_REMITTED', { id: groupId });
+    revalidatePath('/admin/partner-cash');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error marking as remitted:', error);
+    return { success: false, error: error.message || 'Failed to mark as remitted' };
+  }
+}

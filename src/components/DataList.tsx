@@ -9,22 +9,27 @@ type DataListProps = {
   title: string;
   description: string;
   bazaarsList?: { id: string; name: string }[];
+  filterParam?: string;
 };
 
 import { useRouter } from 'next/navigation';
+import { fetchAdminData } from '@/lib/fetchData';
 import { assignBazaar, assignDeliveryCategory, assignItemDeliveryCategory, deleteRecord, updateRecordPrice } from '@/lib/actions';
 
-export default function DataList({ tabName, stats, requests, title, description, bazaarsList }: DataListProps) {
+export default function DataList({ tabName, stats, requests, title, description, bazaarsList, filterParam }: DataListProps) {
+  const [data, setData] = useState<any[]>(requests);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(requests.length >= 20);
+
   const [selectedBazaars, setSelectedBazaars] = useState<Record<string, string>>({});
   const [selectedDeliveryCategories, setSelectedDeliveryCategories] = useState<Record<string, string>>({});
   const [assigning, setAssigning] = useState<Record<string, boolean>>({});
-  const [visibleCount, setVisibleCount] = useState(10);
   const [filterBazaarId, setFilterBazaarId] = useState<string>('all');
   const [editedPrices, setEditedPrices] = useState<Record<string, number>>({});
   const [updatingPrice, setUpdatingPrice] = useState<Record<string, boolean>>({});
   const router = useRouter();
 
-  const filteredRequests = requests.filter(req => {
+  const filteredRequests = data.filter(req => {
     if (filterBazaarId && filterBazaarId !== 'all') {
       return req.raw?.bazaarId === filterBazaarId;
     }
@@ -97,7 +102,7 @@ export default function DataList({ tabName, stats, requests, title, description,
   };
 
   const handleUpdatePrice = async (recordId: string) => {
-    const item = requests.find(r => r.raw._id === recordId);
+    const item = data.find(r => r.raw._id === recordId);
     if (!item) return;
 
     const newPrice = editedPrices[item.id];
@@ -115,6 +120,25 @@ export default function DataList({ tabName, stats, requests, title, description,
       alert(e.message || 'Error updating price');
     } finally {
       setUpdatingPrice(prev => ({ ...prev, [recordId]: false }));
+    }
+  };
+
+  const handleLoadMore = async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const skip = data.length;
+      const res = await fetchAdminData(tabName, filterParam, skip, 20);
+      if (res && res.requests) {
+        setData(prev => [...prev, ...res.requests]);
+        if (res.requests.length < 20) {
+          setHasMore(false);
+        }
+      }
+    } catch (e) {
+      console.error('Error loading more:', e);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -155,7 +179,7 @@ export default function DataList({ tabName, stats, requests, title, description,
                 <select 
                   className="px-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 bg-white min-w-[150px]"
                   value={filterBazaarId}
-                  onChange={(e) => { setFilterBazaarId(e.target.value); setVisibleCount(10); }}
+                  onChange={(e) => { setFilterBazaarId(e.target.value); }}
                 >
                   <option value="all">All Bazaars</option>
                   {bazaarsList.map(b => (
@@ -188,7 +212,7 @@ export default function DataList({ tabName, stats, requests, title, description,
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredRequests.slice(0, visibleCount).map((item, idx) => (
+                {filteredRequests.map((item, idx) => (
                   <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
                     
                     {/* DETAILS COLUMN */}
@@ -367,13 +391,14 @@ export default function DataList({ tabName, stats, requests, title, description,
             </table>
           </div>
           
-          {visibleCount < filteredRequests.length && (
+          {hasMore && (
             <div className="p-4 border-t border-gray-100 flex justify-center bg-gray-50/30">
               <button 
-                onClick={() => setVisibleCount(prev => prev + 10)}
-                className="px-6 py-2 bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-semibold rounded-lg shadow-sm transition-all text-sm"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="px-6 py-2 bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 font-semibold rounded-lg shadow-sm transition-all text-sm disabled:opacity-50"
               >
-                Load More (Showing {visibleCount} of {filteredRequests.length})
+                {loadingMore ? 'Loading...' : `Load More (Showing ${data.length})`}
               </button>
             </div>
           )}

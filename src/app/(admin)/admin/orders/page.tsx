@@ -12,6 +12,7 @@ export default async function Page({ searchParams }: { searchParams: { date?: st
       description="Manage and verify platform orders."
       stats={stats}
       requests={requests}
+      filterParam={dateParam}
     />
   );
 }

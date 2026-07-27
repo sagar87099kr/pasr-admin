@@ -1,8 +1,8 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://www.pasr.in';
 
-export async function fetchAdminData(tab: string, filterParam?: string) {
+export async function fetchAdminData(tab: string, filterParam?: string, skip: number = 0, limit: number = 20) {
   try {
-    let url = `${API_URL}/api/admin/data?tab=${tab}`;
+    let url = `${API_URL}/api/admin/data?tab=${tab}&skip=${skip}&limit=${limit}`;
     if (filterParam) {
       url += `&filterParam=${filterParam}`;
     }

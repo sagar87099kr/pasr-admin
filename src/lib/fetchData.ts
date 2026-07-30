@@ -23,12 +23,13 @@ export async function fetchAdminData(tab: string, filterParam?: string, skip: nu
       throw new Error(json.message || 'Failed to fetch data');
     }
 
-    return { stats: json.stats, requests: json.requests };
+    return { stats: json.stats, requests: json.requests, dashboardData: json.dashboardData };
   } catch (error: any) {
     console.error('fetchAdminData error:', error);
     return { 
       stats: { pending: 0, verified: 0, rejected: 0 }, 
-      requests: [{ id: 'ERROR', title: String(error.message || error), raw: {} }] 
+      requests: [{ id: 'ERROR', title: String(error.message || error), raw: {} }],
+      dashboardData: null
     };
   }
 }

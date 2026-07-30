@@ -1,16 +1,14 @@
-import DataList from '@/components/DataList';
+import DashboardView from '@/components/DashboardView';
 import { fetchAdminData } from '@/lib/fetchData';
 
 export default async function Page() {
-  const { stats, requests } = await fetchAdminData('dashboard');
+  const { dashboardData } = await fetchAdminData('dashboard');
   
   return (
-    <DataList 
-      tabName="dashboard"
+    <DashboardView 
       title="Admin Dashboard"
-      description="Overview of delivery performance, orders, and revenue."
-      stats={stats}
-      requests={requests}
+      description="Overview of daily performance, orders, coins used, and revenue."
+      dashboardData={dashboardData}
     />
   );
 }

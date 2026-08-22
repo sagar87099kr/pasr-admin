@@ -17,7 +17,8 @@ export default function AdminSidebar({ isMobileOpen = false, closeSidebar = () =
     { name: 'Product Verification', path: '/product/verify' },
     { name: 'Item Verification', path: '/items/verify' },
     { name: 'Kisan Sabha', path: '/admin/kisan-sabha' },
-    { name: 'Partner Cash', path: '/admin/partner-cash' }
+    { name: 'Partner Cash', path: '/admin/partner-cash' },
+    { name: 'Advertisements', path: '/admin/advertisements' }
   ];
 
   return (
